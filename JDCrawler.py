@@ -40,7 +40,7 @@ class JDCrawler:
             extracted_item['img']=self.jd_url(item.select_one('img')['data-lazy-img'])
             extracted_item['name']=item.select_one('.p-name em').text
             extracted_item['url']=url=self.jd_url(item.select_one('a')['href'])
-            extracted_item['id'] = int(url[url.rfind('/') + 1:-5])
+            extracted_item['id'] = int(url[url.rfind('/')+1:-5])
             extracted_item['price']=item.select_one('.p-price').text.strip()
             extracted_item['comment']=item.select_one('.p-commit').text.strip()
             commodities.append(extracted_item)

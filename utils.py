@@ -1,4 +1,5 @@
 import requests
+from bs4 import UnicodeDammit
 
 import constants
 
@@ -15,4 +16,20 @@ def url_refine(raw_url:str,base_url):
 def fetch_html(url,params={}):
     headers = {'user-agent': constants.USER_AGENT}
     r = requests.get(url, params=params, headers=headers)
+    r.encoding='utf-8'
     return r.text
+
+def fetch_binary(url,params={}):
+    headers = {'user-agent': constants.USER_AGENT}
+    r = requests.get(url, params=params, headers=headers)
+    return r.content
+
+
+def decode_html(html_str):
+    converted = UnicodeDammit(html_str)
+    if not converted.unicode_markup:
+        raise UnicodeDecodeError(
+            "Failed to detect encoding, tried [%s]",
+            ', '.join(converted.tried_encodings)
+        )
+    return converted.unicode_markup
