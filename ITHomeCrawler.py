@@ -29,6 +29,10 @@ class ITHomeCrawler:
 
         return news_list
 
+    def get_news_content(self,news_item):
+        html=fetch_html(news_item['url'])
+        soup=BeautifulSoup(html,'lxml')
+        news_item['content']=soup.select_one("#paragraph").text
 
 
     def fetch_news(self,category):
@@ -132,5 +136,6 @@ if __name__ == '__main__':
     crawler=ITHomeCrawler()
     list=crawler.fetch_news("")
     print(list[3])
-    print(crawler.fetch_comments(list[3]['url']))
+    crawler.get_news_content(list[3])
+    #print(crawler.fetch_comments(list[3]['url']))
 

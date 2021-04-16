@@ -33,7 +33,7 @@ class JDCrawler:
     def __parse_search_item(self,html):
         soup = BeautifulSoup(html, 'lxml')
         commodity_items=soup.select(".gl-i-wrap")
-        print(commodity_items[0])
+        #print(commodity_items[0])
         commodities=[]
         for item in commodity_items:
             extracted_item={}
@@ -136,8 +136,9 @@ class JDCrawler:
 
 if __name__ == '__main__':
     jd_crawler=JDCrawler()
-    #jd_crawler.search("红酒")
-    cmts=jd_crawler.get_commodity_comments(67973435803,score=1,number=10)
+    items=jd_crawler.search("红酒")
+    print(items[2])
+    cmts=jd_crawler.get_commodity_comments(items[2]['id'],score=1,number=10)
     print(cmts)
     #cmt_counts=jd_crawler.get_comment_number([67155415602,27339475626],'https://www.jd.com')
     #print(cmt_counts)

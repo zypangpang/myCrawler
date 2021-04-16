@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # max page: 143
     sum=0
     failed_items=[]
-    for i in range(14,51):
+    for i in range(101,144):
         print(f"get ppt list in page {i}...")
         items=c.get_ppt_list("",i)
         for item in items:
