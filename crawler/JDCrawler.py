@@ -3,7 +3,7 @@ import requests
 import json
 from functools import partial
 from bs4 import BeautifulSoup
-from utils import url_refine
+from utils import url_refine,write_json
 #import lxml.html
 
 import constants
@@ -81,7 +81,7 @@ class JDCrawler:
             for item in j['CommentsCount']
         ]
 
-    def __parse_comments(self,id,score,page,only_text=True):
+    def __fetch_comments(self, id, score, page, only_text=True):
         comment_url = 'https://club.jd.com/comment/productPageComments.action'
         # 'callback=fetchJSON_comment98&productId=67973435803&score=2&sortType=5&page=0&pageSize=10&isShadowSku=0&fold=1'
         params = {
@@ -104,7 +104,7 @@ class JDCrawler:
             comments=[
                 {
                     'id':item['id'],
-                    'content':item['content'],
+                    'content':item['content'].strip(),
                     'score': item['score']
                 }
                 for item in j['comments']
@@ -125,7 +125,7 @@ class JDCrawler:
         page=0
         while len(comments) < number:
             print(f"get page {page} ...")
-            new_comments=self.__parse_comments(id,score,page)
+            new_comments=self.__fetch_comments(id, score, page)
             if not new_comments:
                 break
             comments+=new_comments
@@ -136,10 +136,12 @@ class JDCrawler:
 
 if __name__ == '__main__':
     jd_crawler=JDCrawler()
-    items=jd_crawler.search("红酒")
-    print(items[2])
-    cmts=jd_crawler.get_commodity_comments(items[2]['id'],score=1,number=10)
-    print(cmts)
+    #items=jd_crawler.search("红酒")
+    #print(items[2])
+    #cmts=jd_crawler.get_commodity_comments(items[2]['id'],score=1,number=10)
+    cmts=jd_crawler.get_commodity_comments(1304924,score=3,number=1000)
+    #write_json(cmts,"data/jdcmts_good.json")
+
     #cmt_counts=jd_crawler.get_comment_number([67155415602,27339475626],'https://www.jd.com')
     #print(cmt_counts)
 

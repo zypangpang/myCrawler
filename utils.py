@@ -1,3 +1,5 @@
+import json
+
 import requests
 from bs4 import UnicodeDammit
 
@@ -33,3 +35,11 @@ def decode_html(html_str):
             ', '.join(converted.tried_encodings)
         )
     return converted.unicode_markup
+
+def write_json(obj,file_path=None):
+    json_str=json.dumps(obj, ensure_ascii=False, indent="  ")
+    if file_path:
+        with open(file_path,"w") as f:
+            f.write(json_str)
+    else:
+        print(json_str)
