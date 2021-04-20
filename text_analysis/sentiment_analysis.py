@@ -1,4 +1,7 @@
 import json
+
+from gensim.models import Doc2Vec
+from gensim.models.doc2vec import TaggedDocument
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest
@@ -6,6 +9,7 @@ from sklearn.feature_selection import chi2
 from sklearn.svm import SVC, LinearSVC,  NuSVC
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 
 from text_analysis import word_cut
@@ -30,8 +34,33 @@ def split_data(pos_data,neg_data):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=33)
     return (X_train,y_train),(X_test,y_test)
 
+class Doc2VecHelper:
+    def __init__(self):
+        self.model = Doc2Vec.load("doc2vec.model")
+
+    def train(self,X):
+        documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(X)]
+        model = Doc2Vec(documents, vector_size=100, window=2, min_count=1, workers=4)
+        model.save("doc2vec.model")
+        return model
+
+    def fit_transform(self,X):
+        if isinstance(X[0], str):
+            X=[v.split() for v in X]
+        if not self.model:
+            self.model=self.train(X)
+        return self.transform(X)
+
+    def transform(self,X):
+        if isinstance(X[0],str):
+            X=[v.split() for v in X]
+        #X=[res['word'] for res in word_cut.paddle_cut(X)]
+        return [self.model.infer_vector(words) for words in X]
+
+
+
 class SentimentAnalysis:
-    feature_number=100
+    feature_number='150'
     def __init__(self,vec_method="TW",cut_method='paddle',stop_words=()):
         '''
         构造函数
@@ -52,6 +81,7 @@ class SentimentAnalysis:
             'TC': CountVectorizer(stop_words=self.__stop_words),
             'TF': TfidfVectorizer(use_idf=False,stop_words=self.__stop_words),
             'TF-IDF': TfidfVectorizer(use_idf=True,stop_words=self.__stop_words),
+            'Doc2Vec': Doc2VecHelper()
         }
         return __vectorizer_map[self.__vec_method]
 
@@ -77,17 +107,19 @@ class SentimentAnalysis:
 
     def __feature_selection(self,X,y):
         X=self.__vectorize(X)
-        self.__feature_selector=SelectKBest(chi2, k=self.feature_number)
-        X_new = self.__feature_selector.fit_transform(X, y)
-        return X_new
+        if self.__vec_method != 'Doc2Vec':
+            self.__feature_selector=SelectKBest(chi2, k=self.feature_number)
+            X = self.__feature_selector.fit_transform(X, y)
+        return X
 
     def train(self, X, y):
         X=self.__feature_selection(X,y)
-        self.__clf=LinearSVC().fit(X,y)
+        self.__clf=NuSVC(nu=0.4,kernel='rbf').fit(X,y)
 
     def predict(self,X):
         X=self.__vectorizer.transform(X)
-        X=self.__feature_selector.transform(X)
+        if self.__vec_method != 'Doc2Vec':
+            X=self.__feature_selector.transform(X)
         return self.__clf.predict(X)
 
 
@@ -97,7 +129,7 @@ if __name__ == '__main__':
     neg_data = read_comment_json("data/jdcmts_bad.json")
     train_data,test_data=split_data(pos_data,neg_data)
     stop_words=read_stop_words("data/baidu_stopwords.txt")
-    sa=SentimentAnalysis(vec_method='TF',stop_words=stop_words)
+    sa=SentimentAnalysis(vec_method='Doc2Vec',cut_method='paddle',stop_words=stop_words)
     sa.train(train_data[0],train_data[1])
     pred_y=sa.predict(test_data[0])
     print(accuracy_score(test_data[1],pred_y))
