@@ -79,12 +79,12 @@ class SentimentAnalysis:
         return self.__vectorizer.fit_transform(X)
 
     def __feature_selection(self,X,y):
-        X=self.__vectorize(X)
         self.__feature_selector=SelectKBest(chi2, k=self.feature_number)
         X= self.__feature_selector.fit_transform(X, y)
         return X
 
     def train(self, X, y):
+        X=self.__vectorize(X)
         X=self.__feature_selection(X,y)
         self.__clf=NuSVC(nu=0.4,kernel='rbf').fit(X,y)
 
@@ -96,15 +96,16 @@ class SentimentAnalysis:
 
 
 if __name__ == '__main__':
-    #print(read_stop_words("data/baidu_stopwords.txt")[:10])
+
     pos_data=read_comment_json("data/jdcmts_good.json")
     neg_data = read_comment_json("data/jdcmts_bad.json")
+
     X_train,y_train,X_test,y_test=split_data(pos_data,neg_data)
-    stop_words=read_stop_words("data/baidu_stopwords.txt")
+
     X_train=word_split(X_train)
     X_test=word_split(X_test)
-    #print(word_cut.word_count(X_train[:10]))
-    sa=SentimentAnalysis(vec_method='TW',stop_words=stop_words)
+
+    sa=SentimentAnalysis(vec_method='TW',stop_words=read_stop_words("data/baidu_stopwords.txt"))
     sa.train(X_train,y_train)
     pred_y=sa.predict(X_test)
     print(accuracy_score(y_test,pred_y))
