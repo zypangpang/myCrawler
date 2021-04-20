@@ -6,6 +6,7 @@ from sklearn.feature_selection import chi2
 from sklearn.svm import SVC, LinearSVC,  NuSVC
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 
 from text_analysis import word_cut
@@ -31,7 +32,7 @@ def split_data(pos_data,neg_data):
     return (X_train,y_train),(X_test,y_test)
 
 class SentimentAnalysis:
-    feature_number=100
+    feature_number=150
     def __init__(self,vec_method="TW",cut_method='paddle',stop_words=()):
         '''
         构造函数
@@ -83,7 +84,7 @@ class SentimentAnalysis:
 
     def train(self, X, y):
         X=self.__feature_selection(X,y)
-        self.__clf=LinearSVC().fit(X,y)
+        self.__clf=NuSVC(nu=0.4,kernel='rbf').fit(X,y)
 
     def predict(self,X):
         X=self.__vectorizer.transform(X)
@@ -97,7 +98,7 @@ if __name__ == '__main__':
     neg_data = read_comment_json("data/jdcmts_bad.json")
     train_data,test_data=split_data(pos_data,neg_data)
     stop_words=read_stop_words("data/baidu_stopwords.txt")
-    sa=SentimentAnalysis(vec_method='TF',stop_words=stop_words)
+    sa=SentimentAnalysis(vec_method='TF-IDF',stop_words=stop_words)
     sa.train(train_data[0],train_data[1])
     pred_y=sa.predict(test_data[0])
     print(accuracy_score(test_data[1],pred_y))
